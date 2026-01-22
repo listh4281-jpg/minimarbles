@@ -3,7 +3,7 @@
 import pytest
 from app import create_app, db
 from app.models import User, BinaryTrade, UnderlyingTrade
-from app.operations import create_user, create_binary_trade, create_underlying_trade
+from app.operations import create_user, create_binary_trade, create_underlying_trade, settle_binary_trade
 
 
 @pytest.fixture
@@ -193,3 +193,92 @@ class TestCreateUnderlyingTrade:
             # Verify relationships work
             assert trade.long_party.name == "Alice"
             assert trade.short_party.name == "Bob"
+
+
+class TestSettleBinaryTrade:
+    """Tests for settling binary trades."""
+
+    def test_settle_binary_trade_yes_outcome(self, app):
+        """Settling with YES should transfer stake_b from Bob to Alice."""
+        with app.app_context():
+            alice = create_user("Alice")
+            bob = create_user("Bob")
+
+            trade = create_binary_trade(
+                party_a_id=alice.id,
+                party_b_id=bob.id,
+                stake_a=20,
+                stake_b=10,
+                description="Will it rain?"
+            )
+
+            # Settle with YES outcome - Alice wins
+            settled_trade = settle_binary_trade(trade.id, outcome=True)
+
+            # Trade should be updated
+            assert settled_trade.status == "settled"
+            assert settled_trade.outcome is True
+
+            # Refresh users from database to get updated balances
+            alice = db.session.get(User, alice.id)
+            bob = db.session.get(User, bob.id)
+
+            # Alice wins Bob's stake (10), Bob loses his stake (10)
+            assert alice.balance == 1010  # 1000 + 10
+            assert bob.balance == 990     # 1000 - 10
+
+    def test_settle_binary_trade_no_outcome(self, app):
+        """Settling with NO should transfer stake_a from Alice to Bob."""
+        with app.app_context():
+            alice = create_user("Alice")
+            bob = create_user("Bob")
+
+            trade = create_binary_trade(
+                party_a_id=alice.id,
+                party_b_id=bob.id,
+                stake_a=20,
+                stake_b=10,
+                description="Will it rain?"
+            )
+
+            # Settle with NO outcome - Bob wins
+            settled_trade = settle_binary_trade(trade.id, outcome=False)
+
+            # Trade should be updated
+            assert settled_trade.status == "settled"
+            assert settled_trade.outcome is False
+
+            # Refresh users from database to get updated balances
+            alice = db.session.get(User, alice.id)
+            bob = db.session.get(User, bob.id)
+
+            # Bob wins Alice's stake (20), Alice loses her stake (20)
+            assert alice.balance == 980   # 1000 - 20
+            assert bob.balance == 1020    # 1000 + 20
+
+    def test_settle_binary_trade_zero_sum(self, app):
+        """Total minimarbles should be conserved after settlement."""
+        with app.app_context():
+            alice = create_user("Alice")
+            bob = create_user("Bob")
+
+            trade = create_binary_trade(
+                party_a_id=alice.id,
+                party_b_id=bob.id,
+                stake_a=50,
+                stake_b=25,
+                description="Test trade"
+            )
+
+            total_before = alice.balance + bob.balance
+
+            settle_binary_trade(trade.id, outcome=True)
+
+            # Refresh users
+            alice = db.session.get(User, alice.id)
+            bob = db.session.get(User, bob.id)
+
+            total_after = alice.balance + bob.balance
+
+            # Minimarbles are conserved
+            assert total_before == total_after
