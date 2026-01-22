@@ -16,7 +16,7 @@ Each task: write test first → watch it fail → write code → watch it pass �
 - [x] **2.3** Underlying trade model - id, long_party, short_party, lot_size, trade_price, settlement_price, description, status
 
 ## Phase 3: Database Operations
-- [ ] **3.1** Create user with starting balance
+- [x] **3.1** Create user with starting balance
 - [ ] **3.2** Create binary trade (open status)
 - [ ] **3.3** Create underlying trade (open status)
 - [ ] **3.4** Settle binary trade - update status, update both user balances
