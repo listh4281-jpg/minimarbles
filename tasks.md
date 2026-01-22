@@ -1,6 +1,10 @@
 # Minimarbles MVP Task List
 
-Each task: write test first → watch it fail → write code → watch it pass → commit
+**Instructions:** Find the first unchecked task (`- [ ]`), complete it using TDD, then mark it done (`- [x]`).
+
+Each task: write test first → watch it fail → write code → watch it pass → commit → exit
+
+---
 
 ## Phase 1: Pure Business Logic (no database)
 - [ ] **1.1** Binary payout calculation - function that takes (alice_stake, bob_stake, outcome) → returns (alice_pnl, bob_pnl)

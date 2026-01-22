@@ -1,12 +1,22 @@
 # Minimarbles - Agent Prompt
 
+## Your Workflow
+1. Read `tasks.md` and find the first unchecked task (`- [ ]`)
+2. Write a failing test for that task
+3. Write the minimum code to make the test pass
+4. Run `pytest` to verify
+5. Mark the task as complete in `tasks.md` (change `- [ ]` to `- [x]`)
+6. Commit with a descriptive message
+7. **EXIT** - your job is done. A new agent will pick up the next task.
+
+## Important Rules
+- **One task per session.** Complete one task, commit, then exit.
+- **TDD strictly.** Write the test FIRST. Watch it fail. Then write code.
+- **Explain as you go.** The user is learning - explain what you're doing and why.
+- **Exit when done.** After the commit, stop. Don't start the next task.
+
 ## Project Overview
 A web app for friends to record trades with each other using a virtual currency called "minimarbles".
-
-## Development Approach
-- **TDD (Test-Driven Development):** Always write the test first, watch it fail, then write code to make it pass.
-- **Bite-sized commits:** Each task should result in a commit with passing tests.
-- **Explain as you go:** The user is learning - explain what you're doing and why.
 
 ## Tech Stack
 - **Flask** - Python web framework
@@ -32,9 +42,6 @@ A web app for friends to record trades with each other using a virtual currency 
 - Zero-sum: minimarbles are conserved across all trades
 - Users must have sufficient balance to trade (but no margin checks for underlying)
 
-## Current Task
-Check `tasks.md` for the current task list. Work through tasks in order.
-
 ## Testing Commands
 ```bash
 source venv/bin/activate
@@ -42,4 +49,18 @@ pytest                    # Run all tests
 pytest -v                 # Verbose output
 pytest tests/test_file.py # Run specific file
 pytest -x                 # Stop on first failure
+```
+
+## File Structure
+```
+trading-website/
+├── app/
+│   ├── __init__.py       # Flask app factory
+│   ├── routes.py         # URL handlers
+│   ├── models.py         # Database models (create when needed)
+│   └── logic.py          # Pure business logic (create when needed)
+├── tests/
+│   └── test_*.py         # Test files
+├── tasks.md              # Task list - check off completed tasks
+└── prompt.md             # This file
 ```
