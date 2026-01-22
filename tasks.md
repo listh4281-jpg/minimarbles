@@ -8,7 +8,7 @@ Each task: write test first → watch it fail → write code → watch it pass �
 
 ## Phase 1: Pure Business Logic (no database)
 - [x] **1.1** Binary payout calculation - function that takes (alice_stake, bob_stake, outcome) → returns (alice_pnl, bob_pnl)
-- [ ] **1.2** Underlying payout calculation - function that takes (lot_size, trade_price, settlement_price) → returns (long_pnl, short_pnl)
+- [x] **1.2** Underlying payout calculation - function that takes (lot_size, trade_price, settlement_price) → returns (long_pnl, short_pnl)
 
 ## Phase 2: Data Models (database schema)
 - [ ] **2.1** User model - id, name, balance
