@@ -5,23 +5,25 @@
 
 cd "$(dirname "$0")"
 
+agent_num=1
+
 while true; do
     echo ""
     echo "========================================"
-    echo "=== Starting new Claude agent ==="
+    echo "=== Starting Claude agent #$agent_num ==="
     echo "=== $(date) ==="
     echo "========================================"
     echo ""
 
-    # Call claude with verbose output to see thinking
-    # --verbose shows reasoning, --print outputs to terminal
+    # Call claude in one-shot mode (--print exits after completion)
+    # Permissions configured in .claude/settings.json
     claude --print --verbose "$(cat prompt.md)"
 
     EXIT_CODE=$?
 
     echo ""
     echo "========================================"
-    echo "=== Agent exited with code $EXIT_CODE ==="
+    echo "=== Agent #$agent_num exited with code $EXIT_CODE ==="
     echo "========================================"
 
     # Check if all tasks complete (no unchecked boxes remain)
@@ -43,4 +45,5 @@ while true; do
     echo ""
 
     sleep 2
+    agent_num=$((agent_num + 1))
 done
