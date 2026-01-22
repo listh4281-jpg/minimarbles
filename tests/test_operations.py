@@ -3,7 +3,15 @@
 import pytest
 from app import create_app, db
 from app.models import User, BinaryTrade, UnderlyingTrade
-from app.operations import create_user, create_binary_trade, create_underlying_trade, settle_binary_trade, settle_underlying_trade
+from app.operations import (
+    create_user,
+    create_binary_trade,
+    create_underlying_trade,
+    settle_binary_trade,
+    settle_underlying_trade,
+    get_user_balance,
+    list_all_users,
+)
 
 
 @pytest.fixture
@@ -373,3 +381,94 @@ class TestSettleUnderlyingTrade:
 
             # Minimarbles are conserved
             assert total_before == total_after
+
+
+class TestGetUserBalance:
+    """Tests for getting a user's balance."""
+
+    def test_get_user_balance_returns_balance(self, app):
+        """Should return the user's current balance."""
+        with app.app_context():
+            user = create_user("Alice")
+
+            balance = get_user_balance(user.id)
+
+            assert balance == 1000
+
+    def test_get_user_balance_after_trade(self, app):
+        """Should return updated balance after a trade is settled."""
+        with app.app_context():
+            alice = create_user("Alice")
+            bob = create_user("Bob")
+
+            trade = create_binary_trade(
+                party_a_id=alice.id,
+                party_b_id=bob.id,
+                stake_a=20,
+                stake_b=10,
+                description="Test trade"
+            )
+            settle_binary_trade(trade.id, outcome=True)
+
+            # Alice won 10 minimarbles
+            assert get_user_balance(alice.id) == 1010
+            # Bob lost 10 minimarbles
+            assert get_user_balance(bob.id) == 990
+
+    def test_get_user_balance_nonexistent_user(self, app):
+        """Should return None for a user that doesn't exist."""
+        with app.app_context():
+            balance = get_user_balance(999)
+
+            assert balance is None
+
+
+class TestListAllUsers:
+    """Tests for listing all users."""
+
+    def test_list_all_users_empty(self, app):
+        """Should return empty list when no users exist."""
+        with app.app_context():
+            users = list_all_users()
+
+            assert users == []
+
+    def test_list_all_users_returns_all(self, app):
+        """Should return all users in the database."""
+        with app.app_context():
+            create_user("Alice")
+            create_user("Bob")
+            create_user("Charlie")
+
+            users = list_all_users()
+
+            assert len(users) == 3
+            names = [u.name for u in users]
+            assert "Alice" in names
+            assert "Bob" in names
+            assert "Charlie" in names
+
+    def test_list_all_users_includes_balances(self, app):
+        """Each user in the list should have their balance."""
+        with app.app_context():
+            alice = create_user("Alice")
+            bob = create_user("Bob")
+
+            # Settle a trade to change balances
+            trade = create_binary_trade(
+                party_a_id=alice.id,
+                party_b_id=bob.id,
+                stake_a=100,
+                stake_b=50,
+                description="Test"
+            )
+            settle_binary_trade(trade.id, outcome=True)
+
+            users = list_all_users()
+
+            # Find users in the list
+            alice_data = next(u for u in users if u.name == "Alice")
+            bob_data = next(u for u in users if u.name == "Bob")
+
+            assert alice_data.balance == 1050  # Won 50
+            assert bob_data.balance == 950     # Lost 50

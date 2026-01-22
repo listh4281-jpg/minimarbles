@@ -21,7 +21,7 @@ Each task: write test first → watch it fail → write code → watch it pass �
 - [x] **3.3** Create underlying trade (open status)
 - [x] **3.4** Settle binary trade - update status, update both user balances
 - [x] **3.5** Settle underlying trade - update status, update both user balances
-- [ ] **3.6** Get user balance / list all users
+- [x] **3.6** Get user balance / list all users
 
 ## Phase 4: Flask Routes (API)
 - [ ] **4.1** GET /users - list all users and balances

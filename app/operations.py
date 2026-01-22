@@ -141,3 +141,29 @@ def settle_underlying_trade(trade_id, settlement_price):
 
     db.session.commit()
     return trade
+
+
+def get_user_balance(user_id):
+    """
+    Get a user's current balance.
+
+    Args:
+        user_id: The ID of the user
+
+    Returns:
+        The user's balance, or None if the user doesn't exist
+    """
+    user = db.session.get(User, user_id)
+    if user is None:
+        return None
+    return user.balance
+
+
+def list_all_users():
+    """
+    List all users in the database.
+
+    Returns:
+        A list of User objects with their current balances
+    """
+    return User.query.all()
