@@ -30,6 +30,12 @@ while true; do
         break
     fi
 
+    # Check if blocked (agent needs human help)
+    if grep -q "^STATUS: BLOCKED" status.md 2>/dev/null; then
+        echo "=== Agent is blocked. Check status.md for details ==="
+        break
+    fi
+
     # Show current task progress
     echo ""
     echo "=== Current tasks.md state ==="

@@ -14,6 +14,7 @@
 - **TDD strictly.** Write the test FIRST. Watch it fail. Then write code.
 - **Explain as you go.** The user is learning - explain what you're doing and why.
 - **Exit when done.** After the commit, stop. Don't start the next task.
+- **If blocked:** If you can't complete a task (need human input, unclear requirements, unexpected error), write `STATUS: BLOCKED` followed by a description to `status.md` and exit. The loop will pause for human review.
 
 ## Project Overview
 A web app for friends to record trades with each other using a virtual currency called "minimarbles".
