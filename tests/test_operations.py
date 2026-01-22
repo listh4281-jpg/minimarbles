@@ -2,8 +2,8 @@
 
 import pytest
 from app import create_app, db
-from app.models import User, BinaryTrade
-from app.operations import create_user, create_binary_trade
+from app.models import User, BinaryTrade, UnderlyingTrade
+from app.operations import create_user, create_binary_trade, create_underlying_trade
 
 
 @pytest.fixture
@@ -125,3 +125,71 @@ class TestCreateBinaryTrade:
             # Verify relationships work
             assert trade.party_a.name == "Alice"
             assert trade.party_b.name == "Bob"
+
+
+class TestCreateUnderlyingTrade:
+    """Tests for underlying trade creation."""
+
+    def test_create_underlying_trade_basic(self, app):
+        """Should create an underlying trade with open status."""
+        with app.app_context():
+            alice = create_user("Alice")
+            bob = create_user("Bob")
+
+            trade = create_underlying_trade(
+                long_party_id=alice.id,
+                short_party_id=bob.id,
+                lot_size=10,
+                trade_price=100.0,
+                description="AAPL stock price at end of month"
+            )
+
+            assert trade.id is not None
+            assert trade.long_party_id == alice.id
+            assert trade.short_party_id == bob.id
+            assert trade.lot_size == 10
+            assert trade.trade_price == 100.0
+            assert trade.description == "AAPL stock price at end of month"
+            assert trade.status == "open"
+            assert trade.settlement_price is None
+
+    def test_create_underlying_trade_persists(self, app):
+        """Created trade should be retrievable from the database."""
+        with app.app_context():
+            alice = create_user("Alice")
+            bob = create_user("Bob")
+
+            trade = create_underlying_trade(
+                long_party_id=alice.id,
+                short_party_id=bob.id,
+                lot_size=5.5,
+                trade_price=50.0,
+                description="Gold price prediction"
+            )
+            trade_id = trade.id
+
+            # Query the database directly to verify persistence
+            found_trade = db.session.get(UnderlyingTrade, trade_id)
+
+            assert found_trade is not None
+            assert found_trade.description == "Gold price prediction"
+            assert found_trade.lot_size == 5.5
+            assert found_trade.status == "open"
+
+    def test_create_underlying_trade_relationships(self, app):
+        """Trade should have proper relationships to users."""
+        with app.app_context():
+            alice = create_user("Alice")
+            bob = create_user("Bob")
+
+            trade = create_underlying_trade(
+                long_party_id=alice.id,
+                short_party_id=bob.id,
+                lot_size=1,
+                trade_price=200.0,
+                description="Test underlying trade"
+            )
+
+            # Verify relationships work
+            assert trade.long_party.name == "Alice"
+            assert trade.short_party.name == "Bob"

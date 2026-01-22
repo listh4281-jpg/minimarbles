@@ -1,7 +1,7 @@
 """Database operations for Minimarbles."""
 
 from app import db
-from app.models import User, BinaryTrade
+from app.models import User, BinaryTrade, UnderlyingTrade
 
 
 def create_user(name):
@@ -45,6 +45,37 @@ def create_binary_trade(party_a_id, party_b_id, stake_a, stake_b, description):
         description=description,
         status="open",
         outcome=None
+    )
+    db.session.add(trade)
+    db.session.commit()
+    return trade
+
+
+def create_underlying_trade(long_party_id, short_party_id, lot_size, trade_price, description):
+    """
+    Create a new underlying trade with open status.
+
+    An underlying trade gives linear exposure to a price movement.
+    Long party profits when price goes up, short party profits when it goes down.
+
+    Args:
+        long_party_id: User ID of the long party (profits if price rises)
+        short_party_id: User ID of the short party (profits if price falls)
+        lot_size: Number of units traded (can be fractional)
+        trade_price: Price at which the trade is entered
+        description: Description of what the trade is based on
+
+    Returns:
+        The created UnderlyingTrade object (with id populated)
+    """
+    trade = UnderlyingTrade(
+        long_party_id=long_party_id,
+        short_party_id=short_party_id,
+        lot_size=lot_size,
+        trade_price=trade_price,
+        description=description,
+        status="open",
+        settlement_price=None
     )
     db.session.add(trade)
     db.session.commit()
