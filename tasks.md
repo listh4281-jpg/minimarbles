@@ -13,7 +13,7 @@ Each task: write test first → watch it fail → write code → watch it pass �
 ## Phase 2: Data Models (database schema)
 - [x] **2.1** User model - id, name, balance
 - [x] **2.2** Binary trade model - id, party_a, party_b, stake_a, stake_b, description, outcome, status
-- [ ] **2.3** Underlying trade model - id, long_party, short_party, lot_size, trade_price, settlement_price, description, status
+- [x] **2.3** Underlying trade model - id, long_party, short_party, lot_size, trade_price, settlement_price, description, status
 
 ## Phase 3: Database Operations
 - [ ] **3.1** Create user with starting balance

@@ -2,7 +2,7 @@
 
 import pytest
 from app import create_app, db
-from app.models import User, BinaryTrade
+from app.models import User, BinaryTrade, UnderlyingTrade
 
 
 @pytest.fixture
@@ -185,3 +185,142 @@ class TestBinaryTradeModel:
             # Should be able to access the User objects through relationships
             assert trade.party_a.name == 'Alice'
             assert trade.party_b.name == 'Bob'
+
+
+class TestUnderlyingTradeModel:
+    """Tests for the UnderlyingTrade model."""
+
+    def test_underlying_trade_has_required_fields(self, app):
+        """UnderlyingTrade model should have all required fields."""
+        with app.app_context():
+            # Create two users to be parties in the trade
+            alice = User(name='Alice')
+            bob = User(name='Bob')
+            db.session.add_all([alice, bob])
+            db.session.commit()
+
+            # Create an underlying trade
+            trade = UnderlyingTrade(
+                long_party_id=alice.id,
+                short_party_id=bob.id,
+                lot_size=10,
+                trade_price=100,
+                description='BTC/USD price on Jan 1'
+            )
+            db.session.add(trade)
+            db.session.commit()
+
+            # Verify all fields
+            assert trade.id is not None
+            assert trade.long_party_id == alice.id
+            assert trade.short_party_id == bob.id
+            assert trade.lot_size == 10
+            assert trade.trade_price == 100
+            assert trade.description == 'BTC/USD price on Jan 1'
+
+    def test_underlying_trade_default_status_is_open(self, app):
+        """New underlying trades should have status 'open' by default."""
+        with app.app_context():
+            alice = User(name='Alice')
+            bob = User(name='Bob')
+            db.session.add_all([alice, bob])
+            db.session.commit()
+
+            trade = UnderlyingTrade(
+                long_party_id=alice.id,
+                short_party_id=bob.id,
+                lot_size=10,
+                trade_price=100,
+                description='Test trade'
+            )
+            db.session.add(trade)
+            db.session.commit()
+
+            assert trade.status == 'open'
+
+    def test_underlying_trade_settlement_price_is_nullable(self, app):
+        """Underlying trade settlement_price should be None until settled."""
+        with app.app_context():
+            alice = User(name='Alice')
+            bob = User(name='Bob')
+            db.session.add_all([alice, bob])
+            db.session.commit()
+
+            trade = UnderlyingTrade(
+                long_party_id=alice.id,
+                short_party_id=bob.id,
+                lot_size=10,
+                trade_price=100,
+                description='Test trade'
+            )
+            db.session.add(trade)
+            db.session.commit()
+
+            # Settlement price should be None for an open trade
+            assert trade.settlement_price is None
+
+    def test_underlying_trade_can_be_settled(self, app):
+        """Underlying trade can have settlement_price set and status changed."""
+        with app.app_context():
+            alice = User(name='Alice')
+            bob = User(name='Bob')
+            db.session.add_all([alice, bob])
+            db.session.commit()
+
+            trade = UnderlyingTrade(
+                long_party_id=alice.id,
+                short_party_id=bob.id,
+                lot_size=10,
+                trade_price=100,
+                description='Test trade',
+                settlement_price=120,
+                status='settled'
+            )
+            db.session.add(trade)
+            db.session.commit()
+
+            assert trade.settlement_price == 120
+            assert trade.status == 'settled'
+
+    def test_underlying_trade_has_relationships_to_users(self, app):
+        """UnderlyingTrade should have relationship accessors to long_party and short_party users."""
+        with app.app_context():
+            alice = User(name='Alice')
+            bob = User(name='Bob')
+            db.session.add_all([alice, bob])
+            db.session.commit()
+
+            trade = UnderlyingTrade(
+                long_party_id=alice.id,
+                short_party_id=bob.id,
+                lot_size=10,
+                trade_price=100,
+                description='Test trade'
+            )
+            db.session.add(trade)
+            db.session.commit()
+
+            # Should be able to access the User objects through relationships
+            assert trade.long_party.name == 'Alice'
+            assert trade.short_party.name == 'Bob'
+
+    def test_underlying_trade_supports_decimal_values(self, app):
+        """UnderlyingTrade should support decimal lot_size and prices."""
+        with app.app_context():
+            alice = User(name='Alice')
+            bob = User(name='Bob')
+            db.session.add_all([alice, bob])
+            db.session.commit()
+
+            trade = UnderlyingTrade(
+                long_party_id=alice.id,
+                short_party_id=bob.id,
+                lot_size=2.5,
+                trade_price=99.50,
+                description='Test trade with decimals'
+            )
+            db.session.add(trade)
+            db.session.commit()
+
+            assert trade.lot_size == 2.5
+            assert trade.trade_price == 99.50
