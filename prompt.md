@@ -7,14 +7,14 @@
 4. Run `pytest` to verify
 5. Mark the task as complete in `tasks.md` (change `- [ ]` to `- [x]`)
 6. Commit with a descriptive message
-7. **EXIT** - your job is done. A new agent will pick up the next task.
+7. If all tasks are complete, output `<promise>COMPLETE</promise>`. Otherwise just stop - a new agent will pick up the next task.
 
 ## Important Rules
 - **One task per session.** Complete one task, commit, then exit.
 - **TDD strictly.** Write the test FIRST. Watch it fail. Then write code.
 - **Explain as you go.** The user is learning - explain what you're doing and why.
-- **Exit when done.** After the commit, stop. Don't start the next task.
-- **If blocked:** If you can't complete a task (need human input, unclear requirements, unexpected error), write `STATUS: BLOCKED` followed by a description to `status.md` and exit. The loop will pause for human review.
+- **One task only.** After the commit, stop. Don't start the next task.
+- **If blocked:** If you can't complete a task (need human input, unclear requirements, unexpected error), write the issue to `status.md` and output `<promise>BLOCKED</promise>`. The loop will pause for human review.
 
 ## Project Overview
 A web app for friends to record trades with each other using a virtual currency called "minimarbles".
