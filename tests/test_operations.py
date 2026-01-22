@@ -2,8 +2,8 @@
 
 import pytest
 from app import create_app, db
-from app.models import User
-from app.operations import create_user
+from app.models import User, BinaryTrade
+from app.operations import create_user, create_binary_trade
 
 
 @pytest.fixture
@@ -58,3 +58,70 @@ class TestCreateUser:
 
             assert alice.id != bob.id
             assert User.query.count() == 2
+
+
+class TestCreateBinaryTrade:
+    """Tests for binary trade creation."""
+
+    def test_create_binary_trade_basic(self, app):
+        """Should create a binary trade with open status."""
+        with app.app_context():
+            alice = create_user("Alice")
+            bob = create_user("Bob")
+
+            trade = create_binary_trade(
+                party_a_id=alice.id,
+                party_b_id=bob.id,
+                stake_a=20,
+                stake_b=10,
+                description="Will it rain tomorrow?"
+            )
+
+            assert trade.id is not None
+            assert trade.party_a_id == alice.id
+            assert trade.party_b_id == bob.id
+            assert trade.stake_a == 20
+            assert trade.stake_b == 10
+            assert trade.description == "Will it rain tomorrow?"
+            assert trade.status == "open"
+            assert trade.outcome is None
+
+    def test_create_binary_trade_persists(self, app):
+        """Created trade should be retrievable from the database."""
+        with app.app_context():
+            alice = create_user("Alice")
+            bob = create_user("Bob")
+
+            trade = create_binary_trade(
+                party_a_id=alice.id,
+                party_b_id=bob.id,
+                stake_a=50,
+                stake_b=25,
+                description="Will the coin flip be heads?"
+            )
+            trade_id = trade.id
+
+            # Query the database directly to verify persistence
+            found_trade = db.session.get(BinaryTrade, trade_id)
+
+            assert found_trade is not None
+            assert found_trade.description == "Will the coin flip be heads?"
+            assert found_trade.status == "open"
+
+    def test_create_binary_trade_relationships(self, app):
+        """Trade should have proper relationships to users."""
+        with app.app_context():
+            alice = create_user("Alice")
+            bob = create_user("Bob")
+
+            trade = create_binary_trade(
+                party_a_id=alice.id,
+                party_b_id=bob.id,
+                stake_a=30,
+                stake_b=15,
+                description="Test trade"
+            )
+
+            # Verify relationships work
+            assert trade.party_a.name == "Alice"
+            assert trade.party_b.name == "Bob"
