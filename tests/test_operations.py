@@ -3,7 +3,7 @@
 import pytest
 from app import create_app, db
 from app.models import User, BinaryTrade, UnderlyingTrade
-from app.operations import create_user, create_binary_trade, create_underlying_trade, settle_binary_trade
+from app.operations import create_user, create_binary_trade, create_underlying_trade, settle_binary_trade, settle_underlying_trade
 
 
 @pytest.fixture
@@ -273,6 +273,97 @@ class TestSettleBinaryTrade:
             total_before = alice.balance + bob.balance
 
             settle_binary_trade(trade.id, outcome=True)
+
+            # Refresh users
+            alice = db.session.get(User, alice.id)
+            bob = db.session.get(User, bob.id)
+
+            total_after = alice.balance + bob.balance
+
+            # Minimarbles are conserved
+            assert total_before == total_after
+
+
+class TestSettleUnderlyingTrade:
+    """Tests for settling underlying trades."""
+
+    def test_settle_underlying_trade_price_goes_up(self, app):
+        """Settling when price rises should transfer minimarbles to long party."""
+        with app.app_context():
+            alice = create_user("Alice")  # long party
+            bob = create_user("Bob")      # short party
+
+            trade = create_underlying_trade(
+                long_party_id=alice.id,
+                short_party_id=bob.id,
+                lot_size=10,
+                trade_price=100.0,
+                description="AAPL price prediction"
+            )
+
+            # Settle with price going up: 110 > 100
+            settled_trade = settle_underlying_trade(trade.id, settlement_price=110.0)
+
+            # Trade should be updated
+            assert settled_trade.status == "settled"
+            assert settled_trade.settlement_price == 110.0
+
+            # Refresh users from database to get updated balances
+            alice = db.session.get(User, alice.id)
+            bob = db.session.get(User, bob.id)
+
+            # P&L = lot_size * (settlement - trade) = 10 * (110 - 100) = 100
+            # Long wins 100, short loses 100
+            assert alice.balance == 1100  # 1000 + 100
+            assert bob.balance == 900     # 1000 - 100
+
+    def test_settle_underlying_trade_price_goes_down(self, app):
+        """Settling when price falls should transfer minimarbles to short party."""
+        with app.app_context():
+            alice = create_user("Alice")  # long party
+            bob = create_user("Bob")      # short party
+
+            trade = create_underlying_trade(
+                long_party_id=alice.id,
+                short_party_id=bob.id,
+                lot_size=10,
+                trade_price=100.0,
+                description="AAPL price prediction"
+            )
+
+            # Settle with price going down: 80 < 100
+            settled_trade = settle_underlying_trade(trade.id, settlement_price=80.0)
+
+            # Trade should be updated
+            assert settled_trade.status == "settled"
+            assert settled_trade.settlement_price == 80.0
+
+            # Refresh users from database to get updated balances
+            alice = db.session.get(User, alice.id)
+            bob = db.session.get(User, bob.id)
+
+            # P&L = lot_size * (settlement - trade) = 10 * (80 - 100) = -200
+            # Long loses 200, short wins 200
+            assert alice.balance == 800   # 1000 - 200
+            assert bob.balance == 1200    # 1000 + 200
+
+    def test_settle_underlying_trade_zero_sum(self, app):
+        """Total minimarbles should be conserved after settlement."""
+        with app.app_context():
+            alice = create_user("Alice")
+            bob = create_user("Bob")
+
+            trade = create_underlying_trade(
+                long_party_id=alice.id,
+                short_party_id=bob.id,
+                lot_size=5.5,
+                trade_price=50.0,
+                description="Test trade"
+            )
+
+            total_before = alice.balance + bob.balance
+
+            settle_underlying_trade(trade.id, settlement_price=75.0)
 
             # Refresh users
             alice = db.session.get(User, alice.id)

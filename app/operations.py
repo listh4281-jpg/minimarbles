@@ -2,7 +2,7 @@
 
 from app import db
 from app.models import User, BinaryTrade, UnderlyingTrade
-from app.logic import calculate_binary_payout
+from app.logic import calculate_binary_payout, calculate_underlying_payout
 
 
 def create_user(name):
@@ -107,6 +107,36 @@ def settle_binary_trade(trade_id, outcome):
 
     # Update trade status
     trade.outcome = outcome
+    trade.status = "settled"
+
+    db.session.commit()
+    return trade
+
+
+def settle_underlying_trade(trade_id, settlement_price):
+    """
+    Settle an underlying trade and update both users' balances.
+
+    Args:
+        trade_id: The ID of the trade to settle
+        settlement_price: The final price to settle the trade at
+
+    Returns:
+        The updated UnderlyingTrade object
+    """
+    trade = db.session.get(UnderlyingTrade, trade_id)
+
+    # Calculate P&L using the pure business logic function
+    long_pnl, short_pnl = calculate_underlying_payout(
+        trade.lot_size, trade.trade_price, settlement_price
+    )
+
+    # Update user balances
+    trade.long_party.balance += long_pnl
+    trade.short_party.balance += short_pnl
+
+    # Update trade status
+    trade.settlement_price = settlement_price
     trade.status = "settled"
 
     db.session.commit()
