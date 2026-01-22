@@ -1,0 +1,34 @@
+# Minimarbles MVP Task List
+
+Each task: write test first → watch it fail → write code → watch it pass → commit
+
+## Phase 1: Pure Business Logic (no database)
+- [ ] **1.1** Binary payout calculation - function that takes (alice_stake, bob_stake, outcome) → returns (alice_pnl, bob_pnl)
+- [ ] **1.2** Underlying payout calculation - function that takes (lot_size, trade_price, settlement_price) → returns (long_pnl, short_pnl)
+
+## Phase 2: Data Models (database schema)
+- [ ] **2.1** User model - id, name, balance
+- [ ] **2.2** Binary trade model - id, party_a, party_b, stake_a, stake_b, description, outcome, status
+- [ ] **2.3** Underlying trade model - id, long_party, short_party, lot_size, trade_price, settlement_price, description, status
+
+## Phase 3: Database Operations
+- [ ] **3.1** Create user with starting balance
+- [ ] **3.2** Create binary trade (open status)
+- [ ] **3.3** Create underlying trade (open status)
+- [ ] **3.4** Settle binary trade - update status, update both user balances
+- [ ] **3.5** Settle underlying trade - update status, update both user balances
+- [ ] **3.6** Get user balance / list all users
+
+## Phase 4: Flask Routes (API)
+- [ ] **4.1** GET /users - list all users and balances
+- [ ] **4.2** POST /users - create new user
+- [ ] **4.3** GET /trades - list all trades
+- [ ] **4.4** POST /trades/binary - create binary trade
+- [ ] **4.5** POST /trades/underlying - create underlying trade
+- [ ] **4.6** POST /trades/<id>/settle - settle a trade
+
+## Phase 5: UI (HTML templates)
+- [ ] **5.1** Home page - show leaderboard (users + balances)
+- [ ] **5.2** Trade list page - show all trades with status
+- [ ] **5.3** Create trade form
+- [ ] **5.4** Settle trade form
