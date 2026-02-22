@@ -70,3 +70,36 @@ class TestGetUsers:
         assert 'id' in user
         assert user['name'] == 'Alice'
         assert user['balance'] == 1000
+
+
+class TestPostUsers:
+    """Tests for POST /users endpoint."""
+
+    def test_create_user_returns_201(self, client, app):
+        """POST /users should return 201 Created on success."""
+        response = client.post('/users', json={'name': 'Alice'})
+        assert response.status_code == 201
+
+    def test_create_user_returns_user_data(self, client, app):
+        """POST /users should return the created user with id, name, and balance."""
+        response = client.post('/users', json={'name': 'Alice'})
+        data = response.get_json()
+
+        assert 'id' in data
+        assert data['name'] == 'Alice'
+        assert data['balance'] == 1000
+
+    def test_create_user_persists(self, client, app):
+        """A user created via POST /users should appear in GET /users."""
+        client.post('/users', json={'name': 'Charlie'})
+
+        response = client.get('/users')
+        data = response.get_json()
+
+        assert len(data) == 1
+        assert data[0]['name'] == 'Charlie'
+
+    def test_create_user_missing_name_returns_400(self, client, app):
+        """POST /users without a name should return 400 Bad Request."""
+        response = client.post('/users', json={})
+        assert response.status_code == 400

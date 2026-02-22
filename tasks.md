@@ -25,7 +25,7 @@ Each task: write test first → watch it fail → write code → watch it pass �
 
 ## Phase 4: Flask Routes (API)
 - [x] **4.1** GET /users - list all users and balances
-- [ ] **4.2** POST /users - create new user
+- [x] **4.2** POST /users - create new user
 - [ ] **4.3** GET /trades - list all trades
 - [ ] **4.4** POST /trades/binary - create binary trade
 - [ ] **4.5** POST /trades/underlying - create underlying trade
