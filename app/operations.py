@@ -143,6 +143,45 @@ def settle_underlying_trade(trade_id, settlement_price):
     return trade
 
 
+def list_all_trades():
+    """
+    List all trades (binary and underlying) in the database.
+
+    Returns:
+        A list of dicts, each representing a trade with a 'type' field
+        indicating whether it's 'binary' or 'underlying'.
+    """
+    trades = []
+
+    for t in BinaryTrade.query.all():
+        trades.append({
+            'id': t.id,
+            'type': 'binary',
+            'party_a': t.party_a.name,
+            'party_b': t.party_b.name,
+            'stake_a': t.stake_a,
+            'stake_b': t.stake_b,
+            'description': t.description,
+            'outcome': t.outcome,
+            'status': t.status,
+        })
+
+    for t in UnderlyingTrade.query.all():
+        trades.append({
+            'id': t.id,
+            'type': 'underlying',
+            'long_party': t.long_party.name,
+            'short_party': t.short_party.name,
+            'lot_size': t.lot_size,
+            'trade_price': t.trade_price,
+            'settlement_price': t.settlement_price,
+            'description': t.description,
+            'status': t.status,
+        })
+
+    return trades
+
+
 def get_user_balance(user_id):
     """
     Get a user's current balance.

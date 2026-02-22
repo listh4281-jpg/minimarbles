@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from app.operations import list_all_users, create_user
+from app.operations import list_all_users, list_all_trades, create_user
 
 bp = Blueprint('main', __name__)
 
@@ -18,6 +18,12 @@ def get_users():
         {'id': user.id, 'name': user.name, 'balance': user.balance}
         for user in users
     ])
+
+
+@bp.route('/trades')
+def get_trades():
+    """Return all trades (binary and underlying) as JSON."""
+    return jsonify(list_all_trades())
 
 
 @bp.route('/users', methods=['POST'])

@@ -2,7 +2,7 @@
 
 import pytest
 from app import create_app, db
-from app.operations import create_user
+from app.operations import create_user, create_binary_trade, create_underlying_trade
 
 
 @pytest.fixture
@@ -103,3 +103,74 @@ class TestPostUsers:
         """POST /users without a name should return 400 Bad Request."""
         response = client.post('/users', json={})
         assert response.status_code == 400
+
+
+class TestGetTrades:
+    """Tests for GET /trades endpoint."""
+
+    def test_get_trades_returns_200(self, client, app):
+        """GET /trades should return a 200 status code."""
+        response = client.get('/trades')
+        assert response.status_code == 200
+
+    def test_get_trades_empty_database(self, client, app):
+        """GET /trades should return an empty list when no trades exist."""
+        response = client.get('/trades')
+        data = response.get_json()
+        assert data == []
+
+    def test_get_trades_returns_binary_trade(self, client, app):
+        """GET /trades should include binary trades with all fields."""
+        with app.app_context():
+            alice = create_user("Alice")
+            bob = create_user("Bob")
+            create_binary_trade(alice.id, bob.id, 20, 10, "Will it rain?")
+
+        response = client.get('/trades')
+        data = response.get_json()
+
+        assert len(data) == 1
+        trade = data[0]
+        assert trade['type'] == 'binary'
+        assert trade['description'] == 'Will it rain?'
+        assert trade['stake_a'] == 20
+        assert trade['stake_b'] == 10
+        assert trade['status'] == 'open'
+        assert trade['party_a'] == 'Alice'
+        assert trade['party_b'] == 'Bob'
+
+    def test_get_trades_returns_underlying_trade(self, client, app):
+        """GET /trades should include underlying trades with all fields."""
+        with app.app_context():
+            alice = create_user("Alice")
+            bob = create_user("Bob")
+            create_underlying_trade(alice.id, bob.id, 5.0, 100.0, "AAPL price")
+
+        response = client.get('/trades')
+        data = response.get_json()
+
+        assert len(data) == 1
+        trade = data[0]
+        assert trade['type'] == 'underlying'
+        assert trade['description'] == 'AAPL price'
+        assert trade['lot_size'] == 5.0
+        assert trade['trade_price'] == 100.0
+        assert trade['status'] == 'open'
+        assert trade['long_party'] == 'Alice'
+        assert trade['short_party'] == 'Bob'
+
+    def test_get_trades_returns_both_types(self, client, app):
+        """GET /trades should return both binary and underlying trades."""
+        with app.app_context():
+            alice = create_user("Alice")
+            bob = create_user("Bob")
+            create_binary_trade(alice.id, bob.id, 20, 10, "Will it rain?")
+            create_underlying_trade(alice.id, bob.id, 5.0, 100.0, "AAPL price")
+
+        response = client.get('/trades')
+        data = response.get_json()
+
+        assert len(data) == 2
+        types = [t['type'] for t in data]
+        assert 'binary' in types
+        assert 'underlying' in types
